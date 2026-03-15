@@ -7,6 +7,26 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Menu>
+            <ListView Name="MessList" d:ItemsSource="{d:SampleData ItemCount=5}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=ChatId}" Width="100">
+                            <GridViewColumnHeader Content="ChatId"></GridViewColumnHeader>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=MessageDate}" Width="150">
+                            <GridViewColumnHeader Content="MessageDate"></GridViewColumnHeader>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Lang}" Width="50">
+                            <GridViewColumnHeader Content="Lang"></GridViewColumnHeader>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Message}" Width="500">
+                            <GridViewColumnHeader Content="Message"></GridViewColumnHeader>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Menu>
 
     </Grid>
 </Window>

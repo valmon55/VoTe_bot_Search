@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using KFA.Vote_Search.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.ObjectModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -16,9 +19,33 @@ namespace KFA.Vote_Search
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private readonly VoTeBotContext _dbContext;
+        public ObservableCollection<UserMessage> Messages { get; set; }
+
+        public MainWindow(VoTeBotContext dbContext)
         {
             InitializeComponent();
+            _dbContext = dbContext;
+            Messages = new ObservableCollection<UserMessage>();
+            LoadDataAsync();
+            MessList.ItemsSource = Messages;
+        }
+        private async void LoadDataAsync()
+        {
+            try
+            {
+                // Асинхронно загружаем данные из БД
+                var messages = await _dbContext.UserMessages.ToListAsync();
+                Messages.Clear();
+                foreach (var message in messages)
+                {
+                    Messages.Add(message);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки данных: {ex.Message}");
+            }
         }
     }
 }
