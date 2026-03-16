@@ -17,7 +17,7 @@
                         <GridViewColumn DisplayMemberBinding="{Binding Path=MessageDate}" Width="150">
                             <GridViewColumnHeader Content="MessageDate"></GridViewColumnHeader>
                         </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=Lang}" Width="50">
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=LanguageCode}" Width="50">
                             <GridViewColumnHeader Content="Lang"></GridViewColumnHeader>
                         </GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Path=Message}" Width="500">
