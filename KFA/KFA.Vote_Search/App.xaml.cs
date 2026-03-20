@@ -1,4 +1,5 @@
 ﻿using KFA.Vote_Search.Models;
+using KFA.Vote_Search.ViewModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +16,6 @@ namespace KFA.Vote_Search
     /// </summary>
     public partial class App : Application
     {
-        //private readonly IServiceProvider __serviceProvider;
         public static IHost? AppHost { get; private set; }
 
         public App()
@@ -30,26 +30,39 @@ namespace KFA.Vote_Search
                 {
                     services.AddDbContext<VoTeBotContext>(options =>
                         options.UseSqlServer(hostContext.Configuration.GetConnectionString("HPConnection")));
+                    services.AddTransient<MessageViewModel>();
                     services.AddSingleton<MainWindow>();
                 })
                 .Build();
         }
         protected override async void OnStartup(StartupEventArgs e)
         {
-            await AppHost.StartAsync();
+            try
+            {
+                await AppHost.StartAsync();
 
-            //// Применяем миграции (если они есть) или гарантируем создание БД
-            //using (var scope = AppHost.Services.CreateScope())
-            //{
-            //    var dbContext = scope.ServiceProvider.GetRequiredService<VoTeBotContext>();
-            //    // Для Database-First обычно не требуется, но можно проверить подключение
-            //    // await dbContext.Database.EnsureCreatedAsync();
-            //}
+                //// Применяем миграции (если они есть) или гарантируем создание БД
+                //using (var scope = AppHost.Services.CreateScope())
+                //{
+                //    var dbContext = scope.ServiceProvider.GetRequiredService<VoTeBotContext>();
+                //    // Для Database-First обычно не требуется, но можно проверить подключение
+                //    // await dbContext.Database.EnsureCreatedAsync();
+                //}
 
-            // 4. Запрашиваем главное окно из контейнера и показываем его
-            var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-            mainWindow.Show();
+                var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+                mainWindow.Show();
 
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при запуске приложения: {ex.Message}\n\n{ex.StackTrace}",
+                                "Критическая ошибка",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+
+                // Завершаем приложение
+                Current.Shutdown();
+            }
             base.OnStartup(e);
         }
         protected override async void OnExit(ExitEventArgs e)
