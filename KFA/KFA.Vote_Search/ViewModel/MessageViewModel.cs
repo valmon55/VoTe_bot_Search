@@ -16,14 +16,50 @@ namespace KFA.Vote_Search.ViewModel
     public class MessageViewModel : INotifyPropertyChanged
     {
         private readonly VoTeBotContext _dbContext;
-        private ObservableCollection<UserMessage> _messages = new ObservableCollection<UserMessage>();
+        private ObservableCollection<UserMessage> messages = new ObservableCollection<UserMessage>();
 
-        public ObservableCollection<UserMessage> messages
+        private ObservableCollection<UserMessage> filteredMessages;
+
+        private string wordFilter = string.Empty;
+        public string WordFilter 
+        { 
+            get { return wordFilter; } 
+            set 
+            { 
+                wordFilter = value;
+                OnPropertyChanged();
+                FilterMessages();
+            } 
+        }
+
+        private void FilterMessages()
         {
-            get => _messages;
+            if(string.IsNullOrEmpty(WordFilter))
+            {
+                FilteredMessages = new ObservableCollection<UserMessage>(messages);
+            }
+            else
+            {
+                var filteredMess = messages.Where(m => m.Message.Contains(WordFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+                FilteredMessages = new ObservableCollection<UserMessage>(filteredMess);
+            }
+        }
+
+        public ObservableCollection<UserMessage> Messages
+        {
+            get => messages;
             set
             {
-                _messages = value;
+                messages = value;
+                OnPropertyChanged();
+            }
+        }
+        public ObservableCollection<UserMessage> FilteredMessages
+        {
+            get => filteredMessages;
+            set
+            {
+                filteredMessages = value;
                 OnPropertyChanged();
             }
         }
@@ -32,6 +68,7 @@ namespace KFA.Vote_Search.ViewModel
         {
             _dbContext = dbContext;
             LoadDataAsync();
+            FilteredMessages = new ObservableCollection<UserMessage>(messages);
         }
 
         private async void LoadDataAsync()
@@ -42,11 +79,13 @@ namespace KFA.Vote_Search.ViewModel
             {
                 // Асинхронно загружаем данные из БД
                 var messages1 = await _dbContext.UserMessages.ToListAsync();
-                messages.Clear();
-                foreach (var message in messages1)
-                {
-                    messages.Add(message);
-                }
+                Messages = new ObservableCollection<UserMessage>(messages1);
+                FilteredMessages = new ObservableCollection<UserMessage>(messages1);
+                //messages.Clear();
+                //foreach (var message in messages1)
+                //{
+                //    messages.Add(message);
+                //}
             }
             catch (System.Exception ex)
             {

@@ -8,25 +8,45 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Menu>
-            <ListView Name="MessList" ItemsSource="{Binding messages }">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=ChatId}" Width="100">
-                            <GridViewColumnHeader Content="ChatId"></GridViewColumnHeader>
-                        </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=MessageDate}" Width="150">
-                            <GridViewColumnHeader Content="MessageDate"></GridViewColumnHeader>
-                        </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=LanguageCode}" Width="50">
-                            <GridViewColumnHeader Content="Lang"></GridViewColumnHeader>
-                        </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=Message}" Width="500">
-                            <GridViewColumnHeader Content="Message"></GridViewColumnHeader>
-                        </GridViewColumn>
-                    </GridView>
-                </ListView.View>
-            </ListView>
-        </Menu>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Label FontSize="16" Margin="10 5" >Диапазон дат:</Label>
+            <DatePicker FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="Auto"></DatePicker>
+            <DatePicker FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="Auto"></DatePicker>
+        </StackPanel>
+        <StackPanel Grid.Row="1"  Orientation="Horizontal">
+            <Label FontSize="16" Margin="10 5">Язык</Label>
+            <TextBox FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="50"></TextBox>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <Label FontSize="16" Margin="10 5" >Фильтр</Label>
+            <TextBox Text="{Binding WordFilter, UpdateSourceTrigger=PropertyChanged}" FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="150"/>
+        </StackPanel>
+        <ListView Grid.Row="3" Name="MessList" FontSize="14" ItemsSource="{Binding FilteredMessages }">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=ChatId}" Width="Auto">
+                        <GridViewColumnHeader Content="ChatId"></GridViewColumnHeader>
+                    </GridViewColumn>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=MessageDate}" Width="Auto">
+                        <GridViewColumnHeader Content="MessageDate"></GridViewColumnHeader>
+                    </GridViewColumn>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=LanguageCode}" Width="Auto">
+                        <GridViewColumnHeader Content="Lang"></GridViewColumnHeader>
+                    </GridViewColumn>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=Message}" Width="Auto">
+                        <GridViewColumnHeader Content="Message"></GridViewColumnHeader>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
     </Grid>
 </Window>
