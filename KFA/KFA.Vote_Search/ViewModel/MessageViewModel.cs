@@ -20,6 +20,8 @@ namespace KFA.Vote_Search.ViewModel
 
         private ObservableCollection<UserMessage> filteredMessages;
 
+        private bool isLoading = true;
+
         private string wordFilter = string.Empty;
         public string WordFilter 
         { 
@@ -28,19 +30,109 @@ namespace KFA.Vote_Search.ViewModel
             { 
                 wordFilter = value;
                 OnPropertyChanged();
-                FilterMessages();
+                if (!isLoading)
+                    FilterMessages();
             } 
+        }
+        private string langFilter = string.Empty;
+        public string LangFilter
+        { 
+            get { return langFilter; }
+            set
+            {
+                langFilter = value; 
+                OnPropertyChanged();
+                if( !isLoading)
+                    FilterMessages();
+            }
+        }
+        private DateTime? dateTimeFromFilter;
+        public DateTime? DateTimeFromFilter
+        {
+            get { return dateTimeFromFilter; }
+            set
+            {
+                if (dateTimeToFilter != value)
+                {
+                    dateTimeFromFilter = value;
+                    OnPropertyChanged();
+                    if (!isLoading)
+                        FilterMessages();
+                }
+            }
+        }
+        private DateTime? dateTimeToFilter;
+        public DateTime? DateTimeToFilter
+        {
+            get { return dateTimeToFilter; }
+            set
+            {
+                if (dateTimeToFilter != value)
+                {
+                    dateTimeToFilter = value;
+                    OnPropertyChanged();
+                    if (!isLoading)
+                        FilterMessages();
+                }
+            }
+        }
+        private DateTime? minDate;
+        public DateTime? MinDate
+        {
+            get { return minDate; }
+            set
+            {
+                if (minDate != value)
+                { 
+                    minDate = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        private DateTime? maxDate;
+        public DateTime? MaxDate
+        {
+            get { return maxDate; }
+            set
+            {
+                if (maxDate != value)
+                {
+                    maxDate = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         private void FilterMessages()
         {
-            if(string.IsNullOrEmpty(WordFilter))
+            if (messages == null || !messages.Any())
             {
                 FilteredMessages = new ObservableCollection<UserMessage>(messages);
+                return;
             }
             else
             {
-                var filteredMess = messages.Where(m => m.Message.Contains(WordFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+                var filteredMess = messages.AsEnumerable();
+
+                if (!string.IsNullOrEmpty(WordFilter))
+                {
+                    filteredMess = filteredMess.Where(m => m.Message != null &&
+                                m.Message.Contains(WordFilter, StringComparison.OrdinalIgnoreCase));
+                }
+                if (!string.IsNullOrEmpty(LangFilter))
+                {
+                    filteredMess = filteredMess.Where(m => m.LanguageCode != null &&
+                                m.LanguageCode.Contains(LangFilter, StringComparison.OrdinalIgnoreCase));
+                }
+                if (DateTimeFromFilter.HasValue)
+                {
+                    filteredMess = filteredMess.Where(m => m.MessageDate >= DateTimeFromFilter.Value.Date);
+                }
+                if (DateTimeToFilter.HasValue)
+                {
+                    filteredMess = filteredMess.Where(m => m.MessageDate < DateTimeToFilter.Value.Date);
+                }
+                    
                 FilteredMessages = new ObservableCollection<UserMessage>(filteredMess);
             }
         }
@@ -67,8 +159,8 @@ namespace KFA.Vote_Search.ViewModel
         public MessageViewModel(VoTeBotContext dbContext)
         {
             _dbContext = dbContext;
-            LoadDataAsync();
             FilteredMessages = new ObservableCollection<UserMessage>(messages);
+            LoadDataAsync();
         }
 
         private async void LoadDataAsync()
@@ -77,23 +169,50 @@ namespace KFA.Vote_Search.ViewModel
                 return;
             try
             {
+                isLoading = true;
                 // Асинхронно загружаем данные из БД
                 var messages1 = await _dbContext.UserMessages.ToListAsync();
                 Messages = new ObservableCollection<UserMessage>(messages1);
-                FilteredMessages = new ObservableCollection<UserMessage>(messages1);
-                //messages.Clear();
-                //foreach (var message in messages1)
-                //{
-                //    messages.Add(message);
-                //}
+
+                SetDateRange();
+
+                FilterMessages();
+
             }
             catch (System.Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки данных: {ex.Message}");
             }
+            finally
+            {
+                isLoading = false;
+            }
         }
 
-        // Реализация INotifyPropertyChanged для уведомления UI об изменениях
+        private void SetDateRange()
+        {
+            if (Messages != null || Messages.Any())
+            {
+                MinDate = Messages.Min(x => x.MessageDate);
+                MaxDate = Messages.Max(x => x.MessageDate);
+                DateTimeFromFilter = MinDate;
+                //добавляем 1 день, т.к. проверям на < Max
+                DateTimeToFilter = MaxDate.Value.AddDays(1);
+
+                OnPropertyChanged(nameof(DateTimeFromFilter));
+                OnPropertyChanged(nameof(DateTimeToFilter));
+                OnPropertyChanged(nameof(MinDate));
+                OnPropertyChanged(nameof(MaxDate));
+            }
+            else
+            {
+                MinDate = DateTime.Today.AddMonths(-1);
+                MaxDate= DateTime.Today;
+                DateTimeFromFilter = MinDate;
+                DateTimeToFilter = MaxDate;
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged([CallerMemberName] string? name = null)

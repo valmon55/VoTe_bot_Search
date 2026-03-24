@@ -19,12 +19,12 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Label FontSize="16" Margin="10 5" >Диапазон дат:</Label>
-            <DatePicker FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="Auto"></DatePicker>
-            <DatePicker FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="Auto"></DatePicker>
+            <DatePicker SelectedDate="{Binding DateTimeFromFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="Auto"></DatePicker>
+            <DatePicker SelectedDate="{Binding DateTimeToFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="Auto"></DatePicker>
         </StackPanel>
         <StackPanel Grid.Row="1"  Orientation="Horizontal">
             <Label FontSize="16" Margin="10 5">Язык</Label>
-            <TextBox FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="50"></TextBox>
+            <TextBox Text="{Binding LangFilter,UpdateSourceTrigger=PropertyChanged}" FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="50"></TextBox>
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Label FontSize="16" Margin="10 5" >Фильтр</Label>

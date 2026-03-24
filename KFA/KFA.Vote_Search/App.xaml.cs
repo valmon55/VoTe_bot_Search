@@ -41,14 +41,6 @@ namespace KFA.Vote_Search
             {
                 await AppHost.StartAsync();
 
-                //// Применяем миграции (если они есть) или гарантируем создание БД
-                //using (var scope = AppHost.Services.CreateScope())
-                //{
-                //    var dbContext = scope.ServiceProvider.GetRequiredService<VoTeBotContext>();
-                //    // Для Database-First обычно не требуется, но можно проверить подключение
-                //    // await dbContext.Database.EnsureCreatedAsync();
-                //}
-
                 var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
                 mainWindow.Show();
 
