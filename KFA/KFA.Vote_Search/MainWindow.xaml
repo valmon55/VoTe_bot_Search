@@ -30,7 +30,7 @@
             <Label FontSize="16" Margin="10 5" >Фильтр</Label>
             <TextBox Text="{Binding WordFilter, UpdateSourceTrigger=PropertyChanged}" FontSize="16" Margin="10 5" HorizontalAlignment="Left" Width="150"/>
         </StackPanel>
-        <ListView Grid.Row="3" Name="MessList" FontSize="14" ItemsSource="{Binding FilteredMessages }">
+        <ListView Grid.Row="3" Name="MessList" FontSize="14" ItemsSource="{Binding FilteredMessagesView }">
             <ListView.View>
                 <GridView>
                     <GridViewColumn DisplayMemberBinding="{Binding Path=ChatId}" Width="Auto">

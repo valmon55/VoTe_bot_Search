@@ -10,15 +10,43 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
+using System.Windows.Interop;
 
 namespace KFA.Vote_Search.ViewModel
 {
     public class MessageViewModel : INotifyPropertyChanged
     {
         private readonly VoTeBotContext _dbContext;
-        private ObservableCollection<UserMessage> messages = new ObservableCollection<UserMessage>();
+        private ObservableCollection<UserMessage> messages;
+        public ObservableCollection<UserMessage> Messages
+        {
+            get => messages;
+            set 
+            {
+                messages = value;
+                OnPropertyChanged();
 
-        private ObservableCollection<UserMessage> filteredMessages;
+                if (messages != null)
+                {
+                    filteredMessagesView = CollectionViewSource.GetDefaultView(messages);
+                    filteredMessagesView.Filter = FilterMessages;
+                    OnPropertyChanged(nameof(FilteredMessagesView));
+                    if (!isLoading)
+                        filteredMessagesView.Refresh();
+                }
+            }
+        }
+        private ICollectionView filteredMessagesView;
+        public ICollectionView FilteredMessagesView
+        {
+            get => filteredMessagesView;
+            set
+            {
+                filteredMessagesView = value;
+                OnPropertyChanged();
+            }
+        } 
 
         private bool isLoading = true;
 
@@ -30,8 +58,8 @@ namespace KFA.Vote_Search.ViewModel
             { 
                 wordFilter = value;
                 OnPropertyChanged();
-                if (!isLoading)
-                    FilterMessages();
+                if (!isLoading && filteredMessagesView != null)
+                    filteredMessagesView.Refresh();
             } 
         }
         private string langFilter = string.Empty;
@@ -42,8 +70,8 @@ namespace KFA.Vote_Search.ViewModel
             {
                 langFilter = value; 
                 OnPropertyChanged();
-                if( !isLoading)
-                    FilterMessages();
+                if( !isLoading && filteredMessagesView != null)
+                    filteredMessagesView.Refresh(); 
             }
         }
         private DateTime? dateTimeFromFilter;
@@ -57,7 +85,7 @@ namespace KFA.Vote_Search.ViewModel
                     dateTimeFromFilter = value;
                     OnPropertyChanged();
                     if (!isLoading)
-                        FilterMessages();
+                        filteredMessagesView.Refresh();
                 }
             }
         }
@@ -72,7 +100,7 @@ namespace KFA.Vote_Search.ViewModel
                     dateTimeToFilter = value;
                     OnPropertyChanged();
                     if (!isLoading)
-                        FilterMessages();
+                        filteredMessagesView.Refresh(); 
                 }
             }
         }
@@ -103,63 +131,46 @@ namespace KFA.Vote_Search.ViewModel
             }
         }
 
-        private void FilterMessages()
+        private bool FilterMessages(object obj)
         {
-            if (messages == null || !messages.Any())
+            if (obj is UserMessage message)
             {
-                FilteredMessages = new ObservableCollection<UserMessage>(messages);
-                return;
-            }
-            else
-            {
-                var filteredMess = messages.AsEnumerable();
+                // TRUE - выводить, FALSE - нет
+                bool filter = true;
 
-                if (!string.IsNullOrEmpty(WordFilter))
+                if (DateTimeFromFilter.HasValue && message.MessageDate < dateTimeFromFilter.Value)
                 {
-                    filteredMess = filteredMess.Where(m => m.Message != null &&
-                                m.Message.Contains(WordFilter, StringComparison.OrdinalIgnoreCase));
+                    filter = false;
+                }
+                if (DateTimeToFilter.HasValue && message.MessageDate >= dateTimeToFilter.Value)
+                {
+                    return false;
                 }
                 if (!string.IsNullOrEmpty(LangFilter))
                 {
-                    filteredMess = filteredMess.Where(m => m.LanguageCode != null &&
-                                m.LanguageCode.Contains(LangFilter, StringComparison.OrdinalIgnoreCase));
+                    if (string.IsNullOrEmpty(message.LanguageCode) ||
+                        !message.LanguageCode.Contains(LangFilter, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return false;
+                    }
                 }
-                if (DateTimeFromFilter.HasValue)
+                if (!string.IsNullOrEmpty(WordFilter))
                 {
-                    filteredMess = filteredMess.Where(m => m.MessageDate >= DateTimeFromFilter.Value.Date);
+                    if (string.IsNullOrEmpty(message.Message) ||
+                        !message.Message.Contains(WordFilter, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return false;
+                    }
                 }
-                if (DateTimeToFilter.HasValue)
-                {
-                    filteredMess = filteredMess.Where(m => m.MessageDate < DateTimeToFilter.Value.Date);
-                }
-                    
-                FilteredMessages = new ObservableCollection<UserMessage>(filteredMess);
-            }
-        }
 
-        public ObservableCollection<UserMessage> Messages
-        {
-            get => messages;
-            set
-            {
-                messages = value;
-                OnPropertyChanged();
+                return filter;
             }
+            return false;
         }
-        public ObservableCollection<UserMessage> FilteredMessages
-        {
-            get => filteredMessages;
-            set
-            {
-                filteredMessages = value;
-                OnPropertyChanged();
-            }
-        }
-
         public MessageViewModel(VoTeBotContext dbContext)
         {
             _dbContext = dbContext;
-            FilteredMessages = new ObservableCollection<UserMessage>(messages);
+            Messages = new ObservableCollection<UserMessage>();
             LoadDataAsync();
         }
 
@@ -172,11 +183,22 @@ namespace KFA.Vote_Search.ViewModel
                 isLoading = true;
                 // Асинхронно загружаем данные из БД
                 var messages1 = await _dbContext.UserMessages.ToListAsync();
-                Messages = new ObservableCollection<UserMessage>(messages1);
 
-                SetDateRange();
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Messages.Clear();
+                    foreach(var msg in messages1)
+                    {
+                        Messages.Add(msg);
+                    }
 
-                FilterMessages();
+                    SetDateRange();
+
+                    if (filteredMessagesView != null)
+                    {
+                        filteredMessagesView.Refresh();
+                    }
+                });
 
             }
             catch (System.Exception ex)
